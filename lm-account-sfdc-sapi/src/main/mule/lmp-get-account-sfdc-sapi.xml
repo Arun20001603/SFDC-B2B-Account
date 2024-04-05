@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="lmp-get-account-sfdc-sapiFlow" doc:id="e3554130-48d1-4da6-bc84-cc7b9bec87aa" >
+		<logger level="INFO" doc:name="Flow Start" doc:id="53053488-5b7f-43a7-bc29-ebd0eea8fc59" message="create flow start" />
+		<logger level="INFO" doc:name="Log Received Payload " doc:id="394b125a-c0fa-4dfc-9b73-7530fdd6e12f" message="payload" />
+		<ee:transform doc:name="SFDC Get Account Request" doc:id="103376a6-3429-4c82-ae22-1ab40e45d425">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+"SELECT Name, BillingStreet, BillingCity, BillingState, BillingPostalCode, BillingCountry, ShippingStreet, ShippingCity, ShippingState, ShippingPostalCode, ShippingCountry, Phone, Fax, AccountNumber, Email__c FROM Account WHERE Id='" ++ attributes.uriParams.account_id ++ "'"
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<logger level="INFO" doc:name="Log SFDC Request Payload" doc:id="a031b995-3aa3-4726-ad99-1f6a4e5fa833" message="payload" />
+		<salesforce:query doc:name="Account GET Query " doc:id="6c2a3821-f996-4356-a64a-ecc6eab53cdd" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query><![CDATA[#[payload]]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<logger level="INFO" doc:name="Log SFDC Response Payload" doc:id="edf0e4b3-ea0e-4936-9788-b4982d1b4d6c" message="#[payload]" />
+		<ee:transform doc:name="Map Get Account Response" doc:id="8a4b75e1-a746-4e1f-be07-b1395c2336f8">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    name: payload[0].Name,
+    email: payload[0].Email__c,
+    number: payload[0].AccountNumber,
+    phone: payload[0].Phone,
+    fax: payload[0].Fax,
+    billingAddress: {
+        street: payload[0].BillingStreet,
+        city: payload[0].BillingCity,
+        state: payload[0].BillingState,
+        postalCode: payload[0].BillingPostalCode,
+        country: payload[0].BillingCountry
+    },
+    shippingAddress: {
+        street: payload[0].ShippingStreet,
+        city: payload[0].ShippingCity,
+        state: payload[0].ShippingState,
+        postalCode: payload[0].ShippingPostalCode,
+        country: payload[0].ShippingCountry
+    }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Flow" doc:id="56c5df96-a8fa-4b44-b599-e299475114c9" message="end flow" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c3e5c0ca-3a9a-432d-a6d6-f2405522d800" >
+				<flow-ref doc:name="Flow Reference" doc:id="0e55e99f-8ae6-47f9-8899-268eac98e2bf" name="global_error_handlerSub_Flow"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

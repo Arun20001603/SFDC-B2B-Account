@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="lmp-post-acount-papiFlow" doc:id="d293c177-d643-4c78-8053-88190290134a" >
+		<logger level="INFO" doc:name="Flow Start" doc:id="b1a152b0-a0c0-497b-9355-c971874f8971" message="Flow name : #[flow.name], CorrelationId : #[correlationId] create flow start" />
+		<ee:transform doc:name="Set Variable" doc:id="cff37086-1748-4827-82cc-af3d38ee3cfd" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="Input" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log SFDC Request payload  " doc:id="5897525d-8a6b-4998-a80a-1eb8bc309d02" message="Flow name : #[flow.name], CorrelationId : #[correlationId] After store payload as a variable #[vars.Input]" />
+		<flow-ref doc:name="GET conutries detail" doc:id="0f791537-4050-4ebb-ab1f-8da7a8b50dc8" name="lmp-common-acount-papiSub_Flow"/>
+		<logger level="INFO" doc:name="Log SFDC Request payload  " doc:id="9cd086f7-f13b-4ef8-92fb-392b3f1e8333" message="Flow name : #[flow.name], CorrelationId : #[correlationId] after get country code #[vars.country] ,#[vars.country1]" />
+		<ee:transform doc:name="Map POST Account Request" doc:id="5a73d116-023f-475b-a8d7-2a3b2b13f2e1">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "name": vars.Input.name,
+  "email": vars.Input.email,
+  "number": vars.Input.number,
+  "phone": vars.Input.phone,
+  "fax": vars.Input.fax,
+  "billingAddress": {
+    "street": vars.Input.billingAddress.street,
+    "city": vars.Input.billingAddress.city,
+    "state": vars.Input.billingAddress.state,
+    "postalCode": vars.Input.billingAddress.postalCode,
+    "country": vars.country
+  },
+  "shippingAddress": {
+    "street": vars.Input.shippingAddress.street,
+    "city": vars.Input.shippingAddress.city,
+    "state": vars.Input.shippingAddress.state,
+    "postalCode":vars.Input.shippingAddress.postalCode,
+    "country": vars.country1
+  }
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<logger level="INFO" doc:name="Log SFDC Request payload  " doc:id="61afd8e7-cb64-4836-9b4e-682156086bbd" message="Flow name : #[flow.name], CorrelationId : #[correlationId] after mapping POST Account details Request #[payload]" />
+		<until-successful maxRetries="5" doc:name="Until Successful" doc:id="b767b797-c25f-437c-b807-32827746f6c8" millisBetweenRetries="30000">
+			<http:request method="${account-sfdc-sapi.postRequest.method}" doc:name="POST Request for SFDC Account" doc:id="13c9da2d-0a7e-4fe5-9c9a-0d55da4263a2" config-ref="HTTP_Request_configuration1" path="/${account-sfdc-sapi.postRequest.path}">
+					<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id": "cde44961cb594e168e845570df3e0c18",
+    "client_secret":"5523245890D84094A243f613108D232C",
+     "correlationId":"421cb368-066b-11e1-9647-c5be7398b24e"
+}]]]></http:headers>
+				</http:request>
+		</until-successful>
+		<logger level="INFO" doc:name="End Flow" doc:id="b19ab632-ca45-4dfc-a367-82cfe5f534e8" message="Flow name : #[flow.name], CorrelationId : #[correlationId] Flow Ended"/>
+		<error-handler ref="comman-global-error-handlerError_Handler" />
+	</flow>
+	<sub-flow name="lmp-common-acount-papiSub_Flow" doc:id="8a8afb0e-08d1-43ea-866b-f0118d0b8444" >
+		<scatter-gather doc:name="GET contries details" doc:id="15261d69-bccd-4096-a92f-2826861e0511">
+					<route>
+						<logger level="INFO" doc:name="Log  Country Request payload" doc:id="a0590875-80bf-4542-a113-73acf19a16c5" message="Flow name : #[flow.name], CorrelationId : #[correlationId]"/>
+				<ee:transform doc:name="Map country_Iso" doc:id="663b5f36-cda9-4a6d-9ae7-9dd34cd9cdbf">
+							<ee:message >
+					</ee:message>
+							<ee:variables>
+						<ee:set-variable variableName="country_iso" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.billingAddress.countryIso]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+				<try doc:name="Try" doc:id="8df912a0-a57c-4716-b1a6-e3e7bad78313" >
+					<until-successful maxRetries="5" doc:name="Until Successful" doc:id="f108f212-4ecf-469d-8950-fd607bef8bf8" millisBetweenRetries="30000">
+					<http:request doc:name="GET Request for countries details" doc:id="e3282c12-4bd3-413b-a447-090ff1376e11" config-ref="HTTP_Request_configuration2" method="${first-country-lookup-sapi.getRequest.method}" path="/${first-country-lookup-sapi.getRequest.path}">
+							<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id": "cde44961cb594e168e845570df3e0c18",
+    "client_secret":"5523245890D84094A243f613108D232C",
+     "correlationId":"421cb368-066b-11e1-9647-c5be7398b24e"
+}]]]></http:headers>
+							<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"iso_code" : vars.country_iso
+}]]]></http:uri-params>
+						</http:request>
+				</until-successful>
+					<error-handler ref="comman-global-error-handlerError_Handler-any" />
+				</try>
+				<logger level="INFO" doc:name="Log Country details" doc:id="6427a1af-abef-4d8e-a5c2-c2dffa8899af" message="Flow name : #[flow.name], CorrelationId : #[correlationId] #[payload]" />
+						<ee:transform doc:name="Map Country" doc:id="3a47c9c9-1d32-46a6-b11a-49f30e219213">
+							<ee:message />
+							<ee:variables>
+								<ee:set-variable variableName="country"><![CDATA[%dw 2.0
+output application/java
+---
+payload.country]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+					</route>
+					<route>
+				<logger level="INFO" doc:name="Log  Country Request payload" doc:id="8ea133ad-bc5c-499c-be80-292070afc035" message="Flow name : #[flow.name], CorrelationId : #[correlationId]" />
+				<ee:transform doc:name="Map country_Iso" doc:id="b2e98943-dd2f-40d0-8511-fb8486db5615">
+							<ee:message >
+					</ee:message>
+							<ee:variables>
+						<ee:set-variable variableName="country_iso1" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.shippingAddress.countryIso]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+				<try doc:name="Try" doc:id="958069a9-c5d5-45c7-b590-b27be8a224c0" >
+					<until-successful maxRetries="5" doc:name="Until Successful" doc:id="77f9ccd5-5734-4b21-ad87-4af5f2567c2f" millisBetweenRetries="30000">
+					<http:request method="${first-country-lookup-sapi.getRequest.method}" doc:name="GET Request for Countries details" doc:id="eb710f03-ddac-4bd1-b271-daa968126f43" config-ref="HTTP_Request_configuration2" path="/${first-country-lookup-sapi.getRequest.path}">
+							<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id": "cde44961cb594e168e845570df3e0c18",
+    "client_secret":"5523245890D84094A243f613108D232C",
+     "correlationId":"421cb368-066b-11e1-9647-c5be7398b24e"
+}]]]></http:headers>
+							<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"iso_code" : vars.country_iso1
+}]]]></http:uri-params>
+						</http:request>
+				</until-successful>
+					<error-handler ref="comman-global-error-handlerError_Handler-any" />
+				</try>
+				<logger level="INFO" doc:name="Log country details" doc:id="96d8aefd-5a4f-4f94-bf58-d8568ec012b3" message="Flow name : #[flow.name], CorrelationId : #[correlationId] #[payload]" />
+						<ee:transform doc:name="Map Country" doc:id="77072fcc-257b-4daa-9c1f-7780265bfd3b">
+							<ee:message />
+							<ee:variables>
+								<ee:set-variable variableName="country1"><![CDATA[%dw 2.0
+output application/java
+---
+payload.country]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+					</route>
+				</scatter-gather>
+	</sub-flow>
+</mule>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	 <http:listener-config name="first-country-lookup-sapi-httpListenerConfig">
+        <http:listener-connection port="${https.port}" protocol="HTTPS" host="${https.host}" readTimeout="${https.timeout}">
+			<tls:context >
+				<tls:key-store type="jks" path="${ks.path}" alias="${ks.alias}" keyPassword="${secure::ks.password}" password="${secure::ks.password}"/>
+			</tls:context>
+		</http:listener-connection>
+    </http:listener-config>
+    <apikit:config name="first-country-lookup-sapi-config" api="resource::6362f38d-68e2-4086-a916-87a71810293f:first-country-lookup-sapi:1.0.1:raml:zip:first-country-lookup-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<import doc:name="Import" doc:id="05840d13-a416-4e6f-a022-06467237a635" file="comman-global-error-handler.xml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="d87b0e41-0ec1-4e0e-a71c-92d534adef56" file="config/${mule.env}.yaml" />
+	<global-property doc:name="Global Property" doc:id="2d772676-7e88-439e-b580-847bafbb532f" name="mule.env" value="sit" />
+	<global-property doc:name="Global Property" doc:id="c52dff7b-f7ae-4133-a3b9-6bf4e827e217" name="mule.key" value="password12345679" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="ac912c06-bfa5-43e9-81cd-f9d44b4a75f3" file="config/${mule.env}.yaml" key="${mule.key}" />
+	<api-gateway:autodiscovery apiId="19378943" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="e1a0ef21-f789-4d66-825b-1caaa41e6431" flowRef="first-country-lookup-sapi-main" />
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="f70343f1-b03c-43ef-a51b-02c5e6ab8647" >
+		<http:request-connection protocol="HTTPS" host="${address-lookup-api.getRequest.host}" port="${address-lookup-api.getRequest.port}"/>
+	</http:request-config>
+
+</mule>

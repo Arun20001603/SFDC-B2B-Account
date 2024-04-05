@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd 
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+<http:listener-config name="accounts-papi-httpListenerConfig">
+        <http:listener-connection host="${https.host}" port="${https.port}" protocol="HTTPS" readTimeout="${https.timeout}">
+			<tls:context >
+				<tls:key-store type="jks" path="${ks.path}" alias="${ks.alias}" keyPassword="${secure::ks.password}" password="${secure::ks.password}" />
+			</tls:context>
+		</http:listener-connection>
+    </http:listener-config>
+    <apikit:config name="accounts-papi-config" api="resource::6362f38d-68e2-4086-a916-87a71810293f:accounts-papi:1.0.1:raml:zip:accounts-papi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="41ce0e84-b593-4389-9da4-df81a7d5d267" responseTimeout="${account-sfdc-sapi.putRequest.responsetimeout}">
+		<http:request-connection protocol="HTTPS" host="${account-sfdc-sapi.putRequest.host}" port="${account-sfdc-sapi.putRequest.port}" connectionIdleTimeout="${account-sfdc-sapi.putRequest.timeout}" tlsContext="TLS_Context">
+		</http:request-connection>
+	</http:request-config>
+	<import doc:name="Import" doc:id="411b998d-df04-43b0-a986-b728ef997919" file="comman-global-error-handler.xml" />
+	<api-gateway:autodiscovery apiId="19388408" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="6645b2da-ec41-4e64-bd7d-654ba3f69691" flowRef="accounts-papi-main" />
+	<global-property doc:name="Global Property" doc:id="5cfad8ba-c7f3-439a-b6ec-3eed68a35760" name="mule.env" value="dev" />
+	<global-property doc:name="Global Property" doc:id="918a56d7-4ecb-4ce3-a43b-9a540bf75086" name="mule.key" value="password12345679" />
+    <secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="14f44a4d-2f64-4b5e-a87f-963f9ee96a7e" file="config/${mule.env}.yaml" key="${mule.key}" />
+	<tls:context name="TLS_Context" doc:name="TLS Context" doc:id="d06e89cd-26e9-4f96-8fbe-4146d3c0b1fc" >
+		<tls:trust-store path="${ts.path}" password="${secure::ts.password}" type="jks" />
+	</tls:context>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="f6a69e57-a0f9-4de7-9bc9-fcbbfeb47677" responseTimeout="${account-sfdc-sapi.postRequest.responsetimeout}" >
+		<http:request-connection protocol="HTTPS" host="${account-sfdc-sapi.postRequest.host}" port="${account-sfdc-sapi.postRequest.port}" connectionIdleTimeout="${account-sfdc-sapi.postRequest.timeout}" tlsContext="TLS_Context" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration2" doc:name="HTTP Request configuration" doc:id="7411d92d-0f7a-40d1-bc7b-a0e99f99a2bb" responseTimeout="${first-country-lookup-sapi.getRequest.responsetimeout}" >
+		<http:request-connection protocol="HTTPS" host="${first-country-lookup-sapi.getRequest.host}" port="${first-country-lookup-sapi.getRequest.port}" connectionIdleTimeout="${first-country-lookup-sapi.getRequest.timeout}" tlsContext="TLS_Context" />
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="25ee24dd-4b08-4f4f-b5e7-dba12aa0557d" file="config/${mule.env}.yaml" />
+</mule>

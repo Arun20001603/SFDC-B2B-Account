@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="lmp-put-account-sfdc-sapiFlow" doc:id="ddae818f-57d8-424b-9445-18c8a56b0250" >
+		<logger level="INFO" doc:name="Flow Start" doc:id="ff9f9ded-ed31-41b0-9551-21589cfb5622" message="create flow start" />
+		<logger level="INFO" doc:name="Log Received Payload " doc:id="c60767bb-6630-447f-89f8-067290332d76" message="payload" />
+		<ee:transform doc:name="SFDC Put Account Request" doc:id="b03fdfea-0a18-49a0-a516-fb1e036604c9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+"SELECT Name, BillingStreet, BillingCity, BillingState, BillingPostalCode, BillingCountry, ShippingStreet, ShippingCity, ShippingState, ShippingPostalCode, ShippingCountry, Phone, Fax, AccountNumber, Email__c FROM Account WHERE Id='" ++ attributes.uriParams.account_id ++ "'"
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="payload" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log SFDC Request Payload" doc:id="5f9cb11b-fbf2-4537-8357-fecdd0e1fea0" message="payload" />
+		<salesforce:query doc:name="Account PUT Query" doc:id="a6ddbda3-bdc9-4935-8043-090850b81c4c" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query><![CDATA[#[payload]]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<logger level="INFO" doc:name="Log SFDC Response Payload" doc:id="f1bc2d12-d6d3-4678-b98a-d80537464cdd" message="#[payload]" />
+		<ee:transform doc:name="Map Response" doc:id="0e08a9a0-5da7-4ab7-9ef4-b21df498b97f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	Id: vars.Account_Id,
+	Name: vars.payload.name,
+	Phone: vars.payload.phone,
+	Fax: vars.payload.fax,
+	AccountNumber: vars.payload.number,
+	Email__c: vars.payload.email as String,
+	BillingStreet: vars.payload.billingAddress.street,
+	BillingCity: vars.payload.billingAddress.city,
+	BillingState: vars.payload.billingAddress.state,
+	BillingPostalCode: vars.payload.billingAddress.postalCode,
+	BillingCountry: vars.payload.billingAddress.country,
+	ShippingStreet: vars.payload.shippingAddress.street,
+	ShippingCity: vars.payload.shippingAddress.city,
+	ShippingState: vars.payload.shippingAddress.state,
+	ShippingPostalCode: vars.payload.shippingAddress.postalCode,
+	ShippingCountry: vars.payload.shippingAddress.country
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert objectType="Account" externalIdFieldName="Id" doc:name="Upsert" doc:id="c66395a9-d935-4f29-b1f5-f2d45ef58313" config-ref="Salesforce_Config" />
+		<logger level="INFO" doc:name="Log SFDC Response Payload" doc:id="f66aa58f-fd94-4ab0-9f74-6c3dcbc25986" />
+		<ee:transform doc:name="Map PUT SFDC Account Response" doc:id="c2b284cd-ccc5-4e6a-8c00-13b2994ecd4d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload.items[0].id,
+	status: payload.items[0].statusCode default "200",
+    message: "Account updated successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Flow" doc:id="c6bc2b54-ff12-48fc-8e60-d88cdd8c6ef7" message="end flow" />
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2a98acf0-0b1a-4986-b05e-8ad172f25e67" type="ANY">
+				<flow-ref doc:name="Flow Reference" doc:id="7cf67d08-dbcc-47a5-a9e7-ed5c4373b608" name="global_error_handlerSub_Flow" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

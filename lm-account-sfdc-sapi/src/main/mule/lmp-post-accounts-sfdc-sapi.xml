@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="lmp-post-accounts-sfdc-sapiFlow" doc:id="a212d3ba-7f98-49c9-8bbb-484c892e0d83" >
+		<logger level="INFO" doc:name="Flow Start" doc:id="441997b1-8b5a-4ef8-be9f-f0a2d29bb665" message="create flow start"/>
+		<logger level="INFO" doc:name="Log Received Payload " doc:id="605ea9d3-ae34-4d38-a12e-069d716ef424" message="payload"/>
+		<ee:transform doc:name="Map Post Account SFDC Request" doc:id="97ecef5d-0366-4639-a95d-ba9fc28a5e22" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[output application/java
+---
+[{
+	Name: payload.name,
+	BillingStreet: payload.billingAddress.street,
+	BillingCity: payload.billingAddress.city,
+	BillingState: payload.billingAddress.state,
+	BillingPostalCode: payload.billingAddress.postalCode,
+	BillingCountry: payload.billingAddress.country,
+	ShippingStreet: payload.shippingAddress.street,
+	ShippingCity: payload.shippingAddress.city,
+	ShippingState: payload.shippingAddress.state,
+	ShippingPostalCode: payload.shippingAddress.postalCode,
+	ShippingCountry: payload.shippingAddress.country,
+	Phone: payload.phone,
+	Fax: payload.fax,
+	AccountNumber: payload.number,
+	Email__c: payload.email as String
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log SFDC Request Payload" doc:id="684a9078-0b6a-487d-9600-d83caf477715" message="payload"/>
+		<salesforce:create type="Account" doc:name=" Account Create" doc:id="3dc20ddc-0f5c-4d32-8f7f-55768f2373ed" config-ref="Salesforce_Config" >
+		</salesforce:create>
+		<logger level="INFO" doc:name="Log SFDC Account Response " doc:id="798afaa9-c60e-46c5-b3fb-895e4c7d4847" message="#[payload]" />
+		<choice doc:name="Is payload Check ?" doc:id="9786d313-3c11-48b8-b273-3153e2dc2e62" >
+			<when expression="#[payload.items[0].statusCode != null]">
+				<ee:transform doc:name="Transform Message" doc:id="2ef91bc4-ccfb-49d7-8359-9ce4558125a2">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload.items[0].id,
+	status: payload.items[0].statusCode default "",
+	message: "Account already created successfully"
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				<logger level="INFO" doc:name="Log Error Message " doc:id="10fc6683-77a5-4147-adf1-93963ee6224c" message="#[payload]"/>
+				<raise-error doc:name="Raise error Account" doc:id="b81b7e76-544a-4466-b6d9-f8348518d95d" type="ANY" description="Account already exists" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Map Post SFDC Account Response" doc:id="6ebf309d-007f-425f-93c6-e1131b614084">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload.items[0].id,
+	status: payload.items[0].statusCode default "201",
+	message: "Account created successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<logger level="INFO" doc:name="Log SFDC response" doc:id="f9d9c11c-0a54-4e19-a223-fd41de3c5d3f" message="#[payload]" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Flow" doc:id="d387ccc7-92d1-40d2-a79e-aeb0658882b6" message="end flow"/>
+	</flow>
+</mule>

@@ -1,0 +1,8 @@
+%dw 2.0
+
+type auto_5a40753b_37ae_4c1b_bc09_8f4f0d961f59_Output_Payload = {|
+  id?: String, 
+  message?: String, 
+  status?: "0" | "1"
+|} {"description": "Represents a standard success response object for Post, Patch, Put and Delete"}
+

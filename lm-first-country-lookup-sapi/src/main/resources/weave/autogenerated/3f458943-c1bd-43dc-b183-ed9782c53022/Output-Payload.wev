@@ -1,0 +1,9 @@
+%dw 2.0
+
+type auto_3f458943_c1bd_43dc_b183_ed9782c53022_Output_Payload = {
+  country?: String, 
+  iso?: String, 
+  region?: String, 
+  _?: Any
+}
+

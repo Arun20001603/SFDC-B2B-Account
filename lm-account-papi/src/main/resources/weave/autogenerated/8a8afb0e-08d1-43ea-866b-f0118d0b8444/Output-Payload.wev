@@ -1,0 +1,22 @@
+%dw 2.0
+
+type auto_8a8afb0e_08d1_43ea_866b_f0118d0b8444_Output_Payload = {|
+  "0": org_mule_runtime_api_message_Message, 
+  "1": org_mule_runtime_api_message_Message_5
+|}
+type org_mule_runtime_api_message_Message_5 = {|
+  payload: Any, 
+  attributes: org_mule_extension_http_api_HttpResponseAttributes
+|} {"typeId": "org.mule.runtime.api.message.Message"}
+type org_mule_extension_http_api_HttpResponseAttributes = org_mule_extension_http_api_HttpResponseAttributes
+
+
+
+
+type org_mule_runtime_api_message_Message = {|
+  payload: Any, 
+  attributes: org_mule_extension_http_api_HttpResponseAttributes
+|} {"typeId": "org.mule.runtime.api.message.Message"}
+
+
+

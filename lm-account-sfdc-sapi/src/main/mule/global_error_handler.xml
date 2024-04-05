@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="global_error_handlerSub_Flow" doc:id="8c54b730-2fe4-4a65-ab62-367817d859a6" >
+		<set-variable value="404" doc:name="Set httpStatus" doc:id="36870b4f-3f29-4205-a7fc-2b2cb60e0d1d" variableName="httpStatus"/>
+		<ee:transform doc:name="Map Error Response" doc:id="cc10f086-7801-4f87-8d4f-f935d509c603" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+{
+	"success": false,
+	"apiName": p("api.name") default "",
+	"apiVersion": p("api.version") default "",
+	"correlation-id": correlationId,
+	"timeStamp": now(),
+	"errorDetails":[{
+		"code": vars.httpStatus,
+		"message": "Resource Not Found"
+	}]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Error Message" doc:id="b48f9ce0-1e48-41fe-8fcd-14b3cdda243d" message="Flow name : #[flow.name], CorrelationId : #[correlationId], Account Details Error Response :  #[payload]"/>
+	</sub-flow>
+</mule>

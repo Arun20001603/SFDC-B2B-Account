@@ -1,0 +1,44 @@
+api:
+  name: "lm-account-papi"
+  version: "1.0.0"
+
+https:
+  host: "0.0.0.0"
+  port: "8082"
+  timeout: "30000"
+  path: "/api/*"
+ks:
+  path: "key_store.jks"
+  password: "![EjkosTpMDMSzqGTfk41FiQ==]"
+  alias: "mule-server"
+
+ts:
+  path: "server_trust.jks"
+  password: "![EjkosTpMDMSzqGTfk41FiQ==]"
+
+first-country-lookup-sapi:
+  getRequest:
+    host: "lm-first-country-lookup-sapi1.us-e2.cloudhub.io"
+    timeout: "30000"
+    port: "443"
+    path: "api/countries/{iso_code}"
+    method: "GET"
+    responsetimeout: "90000"
+  
+account-sfdc-sapi:
+  putRequest:
+    host: "lm-account-sfdc-sapi.us-e2.cloudhub.io"
+    timeout: "30000"
+    port: "443"
+    path: "api/accounts/{account_id}"
+    method: "PUT"
+    responsetimeout: "90000"
+    
+  postRequest:
+    host: "lm-account-sfdc-sapi.us-e2.cloudhub.io"
+    timeout: "30000"
+    port: "443"
+    path: "api/accounts"
+    method: "POST"
+    responsetimeout: "90000"
+  

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="lmp-delete-account-sfdc-sapiFlow" doc:id="5a40753b-37ae-4c1b-bc09-8f4f0d961f59" >
+		<logger level="INFO" doc:name="Flow Start" doc:id="ad35c424-546e-4732-ac0f-862ff35af3d8" message="create flow start" />
+		<ee:transform doc:name="SFDC DELETE Account Request" doc:id="df1f5f6b-8f75-45fb-917b-1ca8a472932a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+"SELECT Id FROM Account WHERE Id='" ++ attributes.uriParams.account_id ++ "'"
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<logger level="INFO" doc:name="Log SFDC Request Payload" doc:id="bc864e40-1a08-4d7f-858a-78c64658c9a6" message="payload" />
+		<salesforce:query doc:name="Query" doc:id="7310e97f-ed5c-4d62-a921-0e53aa1b41ea" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query><![CDATA[#[payload]]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<logger level="INFO" doc:name="Log SFDC Response " doc:id="7e1da2a7-c5ac-48b0-b18a-1cebe75e099f" message="#[payload]" />
+		<salesforce:delete doc:name="Delete" doc:id="23667e88-a8bc-45d5-92ba-c3d8e93d2d9f" config-ref="Salesforce_Config" >
+			<salesforce:ids ><![CDATA[#[payload.Id]]]></salesforce:ids>
+		</salesforce:delete>
+		<logger level="INFO" doc:name="Log SFDC Response Payload" doc:id="56339d7a-7b16-48d9-8c11-ef8aaa77005a" />
+		<ee:transform doc:name="Map DELETE Account Response" doc:id="16833785-3365-420c-b19e-4c2093264fbb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload.items[0].id,
+	status: payload.items[0].statusCode default "200",
+	message: "Account deleted successfully",
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Flow" doc:id="ab03d983-f449-4c86-8dab-7b9054e4444c" message="end flow" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="40b82494-71e7-4bfd-acc2-b3099ab6f5b9" >
+				<flow-ref doc:name="Flow Reference" doc:id="edda5b4e-13b2-45fe-9fc6-251bc9d68dc2" name="global_error_handlerSub_Flow" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

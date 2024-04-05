@@ -1,0 +1,19 @@
+api:
+  name: "lm-account-sfdc-sapi"
+  version: "1.0.0"
+
+https:
+  host: "0.0.0.0"
+  port: "8082"
+  timeout: "30000"
+  path: "/api/*"
+ks:
+  path: "key_store.jks"
+  password: "![EjkosTpMDMSzqGTfk41FiQ==]"
+  alias: "mule-server"
+
+salesforceConfig:
+  username: "arunL@logicalminds.com"
+  password: "![42m8x6MN88+NNPT5TxYwMQ==]"
+  securitytoken: "![iMSgZpDCuhZezH8FGYVw9s6yPIUtmDr8UwltpQjz/fM=]"
+  

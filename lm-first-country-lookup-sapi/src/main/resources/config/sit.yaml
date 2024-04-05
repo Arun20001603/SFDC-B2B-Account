@@ -1,0 +1,21 @@
+https:
+  host: "0.0.0.0"
+  port: "8082"
+  timeout: "30000"
+  path: "/api/*"
+
+ks:
+  path: "key_store.jks"
+  password: "![EjkosTpMDMSzqGTfk41FiQ==]"
+  alias: "mule-server"
+ts:
+  path: "server_trust1.jks"
+  password: "![EjkosTpMDMSzqGTfk41FiQ==]" 
+address-lookup-api:
+  getRequest:
+    host: "api.first.org"
+    timeout: "30000"
+    port: "443"
+    path: "data/v1/countries"
+    method: "GET"
+    responsetimeout: "90000"

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="lmp-put-account-papiFlow" doc:id="e9a4d7b8-635a-4788-9473-4f099f3a358d" >
+		<logger level="INFO" doc:name="Flow Start" doc:id="9e712d9f-42b1-485b-90b9-68ce0adffb9e" message="Flow name : #[flow.name], CorrelationId : #[correlationId] create flow start"/>
+		<ee:transform doc:name="Set Variable" doc:id="bdc74b06-b421-4279-83c7-6e2610d890ea" >
+			<ee:variables >
+				<ee:set-variable variableName="account_id" ><![CDATA[attributes.uriParams.'account_id']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log SFDC Request payload  " doc:id="8dc4404d-ba7d-41aa-a070-09ff0161617e" message="Flow name : #[flow.name], CorrelationId : #[correlationId] #[vars.account_id]"/>
+		<ee:transform doc:name="Set variable" doc:id="1f0b824c-9fd4-4fd7-95cb-f56ed2cc7952" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="Input" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log SFDC Request payload  " doc:id="a2aad0ec-f20d-4148-bfdc-517107774d33" message="Flow name : #[flow.name], CorrelationId : #[correlationId] After store payload as a variable #[vars.Input]"/>
+		<flow-ref doc:name="GET countries details" doc:id="f84e2852-74e0-4e03-a8c4-4c9e3edbae18" name="lmp-common-acount-papiSub_Flow"/>
+		<logger level="INFO" doc:name="Log SFDC Request payload  " doc:id="7bb22d2f-194d-4c41-8c85-fa5532288ec2" message="Flow name : #[flow.name], CorrelationId : #[correlationId] after get country code #[vars.country] ,#[vars.country1]"/>
+		<ee:transform doc:name="Map PUT Account Request" doc:id="31812794-0bda-4887-8a9a-f6b7c54c1d99">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "name": vars.Input.name,
+  "email": vars.Input.email,
+  "number": vars.Input.number,
+  "phone": vars.Input.phone,
+  "fax": vars.Input.fax,
+  "billingAddress": {
+    "street": vars.Input.billingAddress.street,
+    "city": vars.Input.billingAddress.city,
+    "state": vars.Input.billingAddress.state,
+    "postalCode": vars.Input.billingAddress.postalCode,
+    "country": vars.country
+  },
+  "shippingAddress": {
+    "street": vars.Input.shippingAddress.street,
+    "city": vars.Input.shippingAddress.city,
+    "state": vars.Input.shippingAddress.state,
+    "postalCode":vars.Input.shippingAddress.postalCode,
+    "country": vars.country1
+  }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log SFDC Request payload  " doc:id="ee563984-52dc-4de2-9d5b-d9884d67b40e" message="Flow name : #[flow.name], CorrelationId : #[correlationId] after Mapping PUT Rerquest details  #[payload]" />
+		<try doc:name="Try" doc:id="130ebe4a-d6bc-4fc9-93af-f2d67e51cad2" >
+			<until-successful maxRetries="5" doc:name="Until Successful" doc:id="157b7bc9-4fb4-45ac-ad80-8dbe1a46e9cf" millisBetweenRetries="30000">
+			<http:request method="${account-sfdc-sapi.putRequest.method}" doc:name="PUT Request for SFDC Account" doc:id="bbc634bf-7588-4aed-9cc2-6bf633b52f6b" config-ref="HTTP_Request_configuration" path="/${account-sfdc-sapi.putRequest.path}">
+					<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id": "cde44961cb594e168e845570df3e0c18",
+    "client_secret":"5523245890D84094A243f613108D232C",
+     "correlationId":"421cb368-066b-11e1-9647-c5be7398b24e"
+}]]]></http:headers>
+					<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"account_id" : vars.account_id
+}]]]></http:uri-params>
+				</http:request>
+		</until-successful>
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="754f767d-7710-442b-b390-74edaa200ce9" >
+					<flow-ref doc:name="Flow Reference" doc:id="47b61d5f-8cf8-448b-b187-a24947b4e4df" name="global_error_handlerSub_Flow"/>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="End Flow" doc:id="f62fee64-e2bb-4683-a12e-fbbba0444d6f" message="Flow name : #[flow.name], CorrelationId : #[correlationId] flow  Ended"/>
+	</flow>
+</mule>

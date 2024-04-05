@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_e9a4d7b8_635a_4788_9473_4f099f3a358d_Output_Variables_country = Any
+
