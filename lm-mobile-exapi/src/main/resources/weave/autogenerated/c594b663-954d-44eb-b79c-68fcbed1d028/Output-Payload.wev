@@ -1,0 +1,11 @@
+%dw 2.0
+
+type auto_c594b663_954d_44eb_b79c_68fcbed1d028_Output_Payload = {|
+  success: Boolean, 
+  apiName: String, 
+  apiVersion: String, 
+  "correlation-id": String, 
+  timeStamp: DateTime, 
+  errorDetails: Array<{|    code: String,     message: String | Null,     additionalInfo: Null  |}>
+|}
+

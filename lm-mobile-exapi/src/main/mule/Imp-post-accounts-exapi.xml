@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="Imp-post-accounts-exapiFlow" doc:id="8988e817-fe26-4d3b-b7ca-85362a4dc5ab" >
+		<logger level="INFO" doc:name="Flow Start" doc:id="c5124828-10c1-4cf2-991d-f383c06d62d3" message="Flow name : #[flow.name], CorrelationId : #[correlationId] create flow start" />
+		<ee:transform doc:name="Incoming payload" doc:id="9d487aa8-1c66-4c18-bae8-3bea5dba329a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Incoming payload" doc:id="fa642410-269e-4685-8ac1-1db0650953a8" message="Flow name : #[flow.name], CorrelationId : #[correlationId] #[vars.account_id]" />
+		<http:request method="${account-sfdc-papi.postRequest.method}" doc:name="POST Request for Account SFDC" doc:id="51ed3ec2-fcda-4d2c-bf60-d88a8ddfb5ad" config-ref="HTTP_Request_configuration1" path="/${account-sfdc-papi.postRequest.path}" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_id": "cde44961cb594e168e845570df3e0c18",
+    "client_secret":"5523245890D84094A243f613108D232C",
+     "correlationId":"421cb368-066b-11e1-9647-c5be7398b24e"
+}]]]></http:headers>
+		</http:request>
+		<logger level="INFO" doc:name="Log Response payload" doc:id="ffb0efd3-9eed-4edd-8691-8ad9fdfff47d" message="Flow name : #[flow.name], CorrelationId : #[correlationId] create flow start" />
+		<ee:transform doc:name="Map Response" doc:id="dbd95adb-5081-4541-b299-60dd331082ea" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Flow" doc:id="e685a8fc-b7ee-454b-a14e-3f70979f722c" message="Flow name : #[flow.name], CorrelationId : #[correlationId] End Flow" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5af250ae-8222-4259-b3a4-8f458f947b26" >
+				<flow-ref doc:name="Flow Reference" doc:id="c0737406-de5f-4b4d-93e8-d7fa6a1ee816" name="global_error_handlerSub_Flow1"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

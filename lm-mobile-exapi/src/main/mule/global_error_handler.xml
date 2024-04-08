@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="global_error_handlerSub_Flow" doc:id="8c54b730-2fe4-4a65-ab62-367817d859a6" >
+		<set-variable value="404" doc:name="Set httpStatus" doc:id="36870b4f-3f29-4205-a7fc-2b2cb60e0d1d" variableName="httpStatus"/>
+		<ee:transform doc:name="Map Error Response" doc:id="cc10f086-7801-4f87-8d4f-f935d509c603" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+{
+	"success": false,
+	"apiName": p("api.name") default "",
+	"apiVersion": p("api.version") default "",
+	"correlation-id": correlationId,
+	"timeStamp": now(),
+	"errorDetails":[{
+		"code": vars.httpStatus,
+		"message": error.description
+	}]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Error Message" doc:id="b48f9ce0-1e48-41fe-8fcd-14b3cdda243d" message="Flow name : #[flow.name], CorrelationId : #[correlationId], Account Details Error Response :  #[payload]"/>
+	</sub-flow>
+	<sub-flow name="global_error_handlerSub_Flow1" doc:id="c594b663-954d-44eb-b79c-68fcbed1d028" >
+		<set-variable value="500" doc:name="Set httpStatus" doc:id="c795dba4-7060-4e12-bd1b-e9faec8ecfba" variableName="httpStatus" />
+		<ee:transform doc:name="Map Error Response" doc:id="49b8b554-0c8a-4fd3-aef6-96f6141d83b1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+{
+	"success": false,
+	"apiName": p("api.name") default "",
+	"apiVersion": p("api.version") default "",
+	"correlation-id": correlationId,
+	"timeStamp": now(),
+	"errorDetails":[{
+		"code": vars.httpStatus default "500",
+		"message": error.detailedDescription,
+		"additionalInfo": error.muleMessage.typedValue
+		}]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Error Message" doc:id="27f10dc9-a0fe-49d5-bdce-7a81a0d22c27" message="Flow name : #[flow.name], CorrelationId : #[correlationId], Account Details Error Response :  #[payload]" />
+	</sub-flow>
+	<sub-flow name="global_error_handlerSub_Flow2" doc:id="117191c8-499e-4e45-be14-12f71d6d0ffd" >
+		<set-variable value="404" doc:name="Set httpStatus" doc:id="8367c77f-ba81-4dc7-b0b5-a302c503e9a5" variableName="httpStatus" />
+		<ee:transform doc:name="Map Error Response" doc:id="d02aaace-b335-4dc0-8d38-b23cc478431e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+{
+	"success": false,
+	"apiName": p("api.name") default "",
+	"apiVersion": p("api.version") default "",
+	"correlation-id": correlationId,
+	"timeStamp": now(),
+	"errorDetails":[{
+		"code": vars.httpStatus default "500",
+		"message": error.errors[0].description ,
+		"additionalInfo": error.errors[0].muleMessage.typedValue
+		}]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Error Message" doc:id="2f90678e-256b-4886-b869-cce3c685ea94" message="Flow name : #[flow.name], CorrelationId : #[correlationId], Account Details Error Response :  #[payload]" />
+	</sub-flow>
+</mule>

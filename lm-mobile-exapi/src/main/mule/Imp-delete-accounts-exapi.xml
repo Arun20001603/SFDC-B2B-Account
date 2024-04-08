@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="Imp-delete-accounts-exapiFlow" doc:id="af36e4fe-0d6b-4a92-bc2a-a48a2ee096c2" >
+		<logger level="INFO" doc:name="Flow Start" doc:id="86ca6bf7-3abd-416d-9c4a-8e6db5d5aa88" message="Flow name : #[flow.name], CorrelationId : #[correlationId] create flow start" />
+		<ee:transform doc:name="Set variable" doc:id="d2e153e8-65f2-4c5d-bb60-a0777ebe4307" >
+			<ee:variables >
+				<ee:set-variable variableName="account_id" ><![CDATA[attributes.uriParams.'account_id']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log set variable" doc:id="7ba7f7ad-9dd1-4c35-8709-dbfdc1ff79a9" message="Flow name : #[flow.name], CorrelationId : #[correlationId] #[vars.account_id]" />
+		<http:request method="${account-sfdc-sapi.deleteRequest.method}" doc:name="DELETERequest for Account SFDC" doc:id="d6ddf9ac-7fcd-4e5d-a8ba-f5501c55fb4f" config-ref="HTTP_Request_configuration3" path="${account-sfdc-sapi.deleteRequest.path}" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_id": "cde44961cb594e168e845570df3e0c18",
+    "client_secret":"5523245890D84094A243f613108D232C",
+     "correlationId":"421cb368-066b-11e1-9647-c5be7398b24e"
+}]]]></http:headers>
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"account_id" : vars.account_id
+}]]]></http:uri-params>
+		</http:request>
+		<logger level="INFO" doc:name="Log Response payload" doc:id="25eaa6a4-71dc-4f33-8f19-d24b4b0e8af3" message="Flow name : #[flow.name], CorrelationId : #[correlationId] create flow start" />
+		<ee:transform doc:name="Map Response" doc:id="0b95a0a9-723a-4863-8011-b5bf67a270cc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Flow" doc:id="aee3d902-5fb4-404d-a29a-44b376728805" message="Flow name : #[flow.name], CorrelationId : #[correlationId] End Flow" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="3b372ee1-7a6f-4d89-9c09-47ac34b75077" >
+				<flow-ref doc:name="Flow Reference" doc:id="60fbc588-a299-49e4-b08b-daae87691706" name="global_error_handlerSub_Flow"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
